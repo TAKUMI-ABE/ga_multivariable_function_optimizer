@@ -1,0 +1,4 @@
+﻿  main.cpp
+d:\mydata\cpp_project\ga_multivariable_function_optimizer\ga_multivariable_function_optimizer\ga_multivariable_function_optimizer\ga_util.h(307): warning C4244: '引数': 'double' から 'unsigned int' への変換です。データが失われる可能性があります。
+  ga_multivariable_function_optimizer.vcxproj -> D:\myData\cpp_project\ga_multivariable_function_optimizer\ga_multivariable_function_optimizer\Debug\ga_multivariable_function_optimizer.exe
+  ga_multivariable_function_optimizer.vcxproj -> D:\myData\cpp_project\ga_multivariable_function_optimizer\ga_multivariable_function_optimizer\Debug\ga_multivariable_function_optimizer.pdb (Full PDB)
