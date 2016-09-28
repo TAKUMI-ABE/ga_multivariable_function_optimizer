@@ -27,7 +27,7 @@ int main() {
 	// GA Alternation Loop of generations 
 	for (int i = 0; i < NUM_OF_GENERATION; i++) {
 		generation.selection();
-		generation.coutResult(i);
+		std::cout << i << generation << std::endl;
 		generation.crossover();
 		generation.mutation();
 		generation.evaluation();

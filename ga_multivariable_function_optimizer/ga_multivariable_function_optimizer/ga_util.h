@@ -184,13 +184,18 @@ public:
 	GaGenaration() {};
 
 	void initGeneration(GaConfiguration& conf);
-	void coutResult(int num);
-	int getPopulation() { return static_cast<int>(genes.size()); }
 
 	void evaluation();
 	void selection();
 	void crossover();
 	void mutation();
+
+	int getPopulation() { return static_cast<int>(genes.size()); }
+	std::vector<GaIndividual> getGenes() { return genes; }
+	int getMutateCount() { return mutateCount; }
+	double getMaxFitness() { return maxFitness; }
+	double getMinFitness() { return minFitness; }
+	double getAvgFitness() { return avgFitness; }
 
 private:
 
@@ -240,22 +245,6 @@ void GaGenaration::selection() {
 	// calc min and max of fitness
 	maxFitness = genes[0].getFitness();
 	minFitness = genes[getPopulation() - 1].getFitness();
-}
-
-void GaGenaration::coutResult(int num) {
-
-	std::cout << "----------------------------------------------------" << std::endl;
-	std::cout << "###  parent   xsite  gtype                    ptype   fitness" << std::endl;
-	int count = 0;
-	for (auto gene : genes) {
-		std::cout << std::setw(3) << count << " (" << std::setw(3) << gene.getParent1() << "," << std::setw(3) << gene.getParent2() << ")  " << std::setw(3) << gene.getCrossPoint() << "   "
-			<< gene.gtype << " " << std::setw(6) << gene.ptype << "    " << std::setw(6) << gene.getFitness() << std::endl;
-		count++;
-	}
-	std::cout << std::endl << "Mutation: " << mutateCount << std::endl
-		<< num << ", " << maxFitness << ", " << avgFitness << ", " << minFitness
-		<< ", " << genes[0].ptype << ", "
-		<< genes[0].gtype << std::endl;
 }
 
 void GaGenaration::crossover() {
@@ -333,6 +322,23 @@ GaIndividual GaGenaration::getChildCrossOver(GaIndividual& parent1, GaIndividual
 	child.gtype.crossoverGtype(parent2.gtype, intersection);
 
 	return child;
+}
+
+std::ostream &operator<<(std::ostream &out, GaGenaration& g) {
+	out << "----------------------------------------------------" << std::endl;
+	out << "###  parent   xsite  gtype                    ptype   fitness" << std::endl;
+	int count = 0;
+	for (auto gene : g.getGenes()) {
+		out << std::setw(3) << count << " (" << std::setw(3) << gene.getParent1() << "," << std::setw(3) << gene.getParent2() << ")  " << std::setw(3) << gene.getCrossPoint() << "   "
+			<< gene.gtype << " " << std::setw(6) << gene.ptype << "    " << std::setw(6) << gene.getFitness() << std::endl;
+		count++;
+	}
+	out << std::endl << "Mutation: " << g.getMutateCount() << std::endl
+		<< g.getMaxFitness() << ", " << g.getAvgFitness() << ", " << g.getMinFitness()
+		<< ", " << g.getGenes()[0].ptype << ", "
+		<< g.getGenes()[0].gtype << std::endl;
+
+	return out;
 }
 
 #endif // GA_UTIL_H
