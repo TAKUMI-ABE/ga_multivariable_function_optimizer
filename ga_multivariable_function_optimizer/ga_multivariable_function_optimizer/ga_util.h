@@ -9,21 +9,15 @@
 #include "ga_target.h"
 
 // params of GA
-const double PTYPE_MAX = 5.12;
-const double PTYPE_MIN = -5.12;
-const int GTYPE_LEN = 20;
-const int GTYPE_MAX = 1;
-const int POP = 50;
 const int NUM_OF_GENERATION = 50;
-const int NUM_OF_VARIABLE = 2;
-
-// params of GA Operators
 const double ELITE_RATE = 0.1;
 const double MUTATE_RATE = 0.02;
 
+
+
 /*
-* Geno Type
-*/
+ * Geno Type
+ */
 class Gtype {
 public:
 	Gtype() {};
@@ -34,13 +28,6 @@ public:
 	int getGCodeLength() { return gCodeLength; }
 	int getGCodeMax() { return gCodeMax; }
 	int getNumOfVariable() { return static_cast<int>(gVector.size()); }
-
-	Gtype operator =(Gtype& g) {
-		this->gVector = g.gVector;
-		this->gCodeLength = g.getGCodeLength();
-		this->gCodeMax = g.getGCodeMax();
-		return *this;
-	}
 
 	std::vector<std::vector<int>> gVector;
 
@@ -84,10 +71,12 @@ int Gtype::mutateGtype() {
 
 std::ostream &operator<<(std::ostream &out, Gtype& g) {
 	out << "[";
-	for (int i = 0; i < g.getNumOfVariable(); i++) {
+	for (int j = 0; j < g.getGCodeLength(); j++)
+		std::cout << g.gVector[0][j];
+	for (int i = 1; i < g.getNumOfVariable(); i++) {
+		std::cout << "|";
 		for (int j = 0; j < g.getGCodeLength(); j++)
 			std::cout << g.gVector[i][j];
-		std::cout << "|";
 	}
 	out << "]";
 
@@ -95,30 +84,29 @@ std::ostream &operator<<(std::ostream &out, Gtype& g) {
 }
 
 /*
-* Pheno Type
-*/
+ * Pheno Type
+ */
 class Ptype {
 public:
 	Ptype() {};
 
 	void decodeGtype(Gtype& g);
-	void setRange(double min, double max);
+	void setRange(std::vector<double> min, std::vector<double> max, int numVariable);
 	std::vector<double> getPtype() { return p; }
 	int getNumOfVariable() { return static_cast<int>(p.size()); }
 
 private:
 	std::vector<double> p;
-	double pMin;
-	double pMax;
+	std::vector<double> pMin;
+	std::vector<double> pMax;
 };
 
 void Ptype::decodeGtype(Gtype& g) {
-	double gap = pMax - pMin;
-	double decoded_value = pMin;
-
-	p.resize(g.getNumOfVariable());
-
 	for (int i = 0; i < g.getNumOfVariable(); i++) {
+		double gap = pMax[i] - pMin[i];
+		double decoded_value = pMin[i];
+
+
 		for (int j=0;j<g.getGCodeLength();j++)
 			if (g.gVector[i][j])
 				decoded_value += gap / pow(2, j + 1);
@@ -127,9 +115,10 @@ void Ptype::decodeGtype(Gtype& g) {
 	}
 }
 
-void Ptype::setRange(double min, double max) {
+void Ptype::setRange(std::vector<double> min, std::vector<double> max, int numVariable) {
 	pMin = min;
 	pMax = max;
+	p.resize(numVariable);
 }
 
 std::ostream &operator<<(std::ostream &out, Ptype& p) {
@@ -141,13 +130,13 @@ std::ostream &operator<<(std::ostream &out, Ptype& p) {
 }
 
 /*
-* individual
-*/
+ * individual
+ */
 class GaIndividual {
 public:
 	GaIndividual() {};
 
-	void setGaIndividual(int gtypeCodeLength, int gtypeCodeMax, double ptyeMin, double ptypeMax, int numVariable);
+	void setGaIndividual(int gtypeCodeLength, int gtypeCodeMax, std::vector<double> ptyeMin, std::vector<double> ptypeMax, int numVariable);
 	void calcFitness(Ptype& p);
 
 	static bool compareGaIndividualPredicate(GaIndividual a, GaIndividual b) { return (a.fitness > b.fitness); }
@@ -173,14 +162,14 @@ private:
 	int crossPoint; // crossover point
 };
 
-void GaIndividual::setGaIndividual(int gtypeCodeLength, int gtypeCodeMax, double ptyeMin, double ptypeMax, int numVariable) {
+void GaIndividual::setGaIndividual(int gtypeCodeLength, int gtypeCodeMax, std::vector<double> ptyeMin, std::vector<double> ptypeMax, int numVariable){
 	rank = 0;
 	parent1 = 0;
 	parent2 = 0;
 	crossPoint = 0;
 
 	gtype.setGtypeRamdom(gtypeCodeLength, gtypeCodeMax, numVariable);
-	ptype.setRange(ptyeMin, ptypeMax);
+	ptype.setRange(ptyeMin, ptypeMax, numVariable);
 }
 
 void GaIndividual::calcFitness(Ptype& p) {
@@ -188,13 +177,13 @@ void GaIndividual::calcFitness(Ptype& p) {
 }
 
 /*
-* a generation
-*/
+ * a generation
+ */
 class GaGenaration {
 public:
 	GaGenaration() {};
 
-	void initGeneration(int gaPopulationSize, int gtypeCodeLength, int gtypeCodeMax, double ptyeMin, double ptypeMax, int numVariable);
+	void initGeneration(GaConfiguration& conf);
 	void coutResult(int num);
 	int getPopulation() { return static_cast<int>(genes.size()); }
 
@@ -215,15 +204,15 @@ private:
 	double avgFitness;
 };
 
-void GaGenaration::initGeneration(int gaPopulationSize, int gtypeCodeLength, int gtypeCodeMax, double ptyeMin, double ptypeMax, int numVariable) {
+void GaGenaration::initGeneration(GaConfiguration& conf) {
 	mutateCount = 0;
 	maxFitness = 0.0;
 	minFitness = 0.0;
 	avgFitness = 0.0;
-	genes.resize(gaPopulationSize);
+	genes.resize(conf.population);
 
 	for (int i = 0; i < getPopulation(); i++)
-		genes[i].setGaIndividual(gtypeCodeLength, gtypeCodeMax, ptyeMin, ptypeMax, numVariable);
+		genes[i].setGaIndividual(conf.gtypeLength, conf.gtypeMax, conf.ptypeMin, conf.ptypeMax, conf.numOfVariable);
 }
 
 void GaGenaration::evaluation() {
@@ -304,7 +293,7 @@ void GaGenaration::crossover() {
 void GaGenaration::mutation() {
 	mutateCount = 0;
 	for (int i = 0; i < getPopulation()*(1.0 - ELITE_RATE); i++)
-		mutateCount += genes[getPopulation()*ELITE_RATE + i].gtype.mutateGtype();
+		mutateCount += genes[static_cast<int>(getPopulation()*ELITE_RATE + i)].gtype.mutateGtype();
 }
 
 GaIndividual GaGenaration::decideParentRoulette(std::vector<GaIndividual>& candidate) {
@@ -324,7 +313,7 @@ GaIndividual GaGenaration::decideParentRoulette(std::vector<GaIndividual>& candi
 		if ((r >= fitnessCategory[i] / totalFitness) && (r < fitnessCategory[i + 1] / totalFitness))
 			return candidate[i];
 
-	return GaIndividual();
+	return candidate[numOfCandidate-1];
 }
 
 GaIndividual GaGenaration::getChildCrossOver(GaIndividual& parent1, GaIndividual& parent2) {

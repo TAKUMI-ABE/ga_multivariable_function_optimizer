@@ -8,13 +8,23 @@ int main() {
 	// init rand()
 	srand((unsigned int)time(NULL));
 
-	std::cout << "Start GA Equation Solver" << std::endl;
+	// configure the parameter
+	GaConfiguration conf;
+	conf.gtypeLength = 20;
+	conf.gtypeMax = 1;
+	conf.numOfVariable = 2;
+	conf.population = 50;
+	conf.ptypeMax = { 5.0, 4.0 };
+	conf.ptypeMin = { -5.0, -4.0 };
 
+	std::cout << "Start GA Multivariable Function Optimiser" << std::endl;
+
+	// GA Initialization
 	GaGenaration generation;
-	generation.initGeneration(POP, GTYPE_LEN, GTYPE_MAX, PTYPE_MIN, PTYPE_MAX, NUM_OF_VARIABLE);
-
+	generation.initGeneration(conf);
 	generation.evaluation();
 
+	// GA Alternation Loop of generations 
 	for (int i = 0; i < NUM_OF_GENERATION; i++) {
 		generation.selection();
 		generation.coutResult(i);
